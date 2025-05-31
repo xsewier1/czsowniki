@@ -1,0 +1,49 @@
+' Save this as "YouTubeToNoTube.vbs" and double-click to run
+Set WshShell = WScript.CreateObject("WScript.Shell")
+Set objIE = CreateObject("InternetExplorer.Application")
+
+' Open both websites
+WshShell.Run "https://notube.net/pl/youtube-app-142"
+WshShell.Run "https://www.youtube.com"
+
+' Main loop to monitor clipboard
+Do While True
+    WScript.Sleep 1000 ' Check every second
+    
+    ' Check if clipboard contains a YouTube URL
+    If InStr(1, GetClipboardText(), "youtube.com/watch?v=") > 0 Then
+        ' Get the YouTube URL from clipboard
+        youtubeUrl = GetClipboardText()
+        
+        ' Focus on NoTube window and paste URL
+        WshShell.AppActivate "NoTube"
+        WScript.Sleep 500
+        WshShell.SendKeys "^a" ' Select all
+        WScript.Sleep 200
+        WshShell.SendKeys youtubeUrl
+        WScript.Sleep 200
+        WshShell.SendKeys "{TAB}" ' Tab to OK button
+        WScript.Sleep 200
+        WshShell.SendKeys "{ENTER}" ' Click OK
+        WScript.Sleep 2000 ' Wait for processing
+        
+        ' Click download button (assuming it's the next focusable element)
+        WshShell.SendKeys "{TAB}"
+        WScript.Sleep 200
+        WshShell.SendKeys "{ENTER}"
+        
+        ' Clear clipboard to prevent repeated processing
+        Set objHTML = CreateObject("htmlfile")
+        objHTML.ParentWindow.ClipboardData.SetData "text", ""
+        
+        ' Optional: notify user
+        WshShell.Popup "Download started for: " & youtubeUrl, 3, "YouTube to NoTube"
+    End If
+Loop
+
+Function GetClipboardText()
+    On Error Resume Next
+    Set objHTML = CreateObject("htmlfile")
+    GetClipboardText = objHTML.ParentWindow.ClipboardData.GetData("text")
+    On Error GoTo 0
+End Function
